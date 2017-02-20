@@ -14,16 +14,17 @@ date: 19 Feb 2017
 
 Mobile Game Automation
 playstore_link: https://play.google.com/store/apps/details?id=com.ketchapp.springninja&hl=en
-Tools Required: OpenCV-Python, scikit-learn, Android Debugger Bridge (adb tools)
+Tools Required: OpenCV-Python, scikit-learn,Android Debugger Bridge (adb tools)
 '''
 
 # import math
 
 import logging
-logging.basicConfig(filename='spring.log',level=logging.DEBUG)
+logging.basicConfig(filename='spring.log', level=logging.DEBUG)
 
 __gameover = False
-ml_algo = 'neural_net' # None
+# ml_algo = None
+ml_algo = 'neural_net'
 
 # Machine Learning Prediction
 ds = np.genfromtxt('data.csv', dtype=float, delimiter=',', names=True)
@@ -32,14 +33,16 @@ train_y = []
 
 for item in ds:
     train_X.append([item[0], item[1]])
-    train_y.append(item[2]+3) # adding boost
+    train_y.append(item[2])
 
 if ml_algo == 'neural_net':
-    regr = MLPRegressor(solver='lbfgs', hidden_layer_sizes=50, max_iter=1000, random_state=1)
+    regr = MLPRegressor(solver='lbfgs', hidden_layer_sizes=10, max_iter=5000, random_state=1)
 else:
     regr = Ridge(alpha=0.5)
 
 regr.fit(train_X, train_y)
+
+print regr.score(train_X[:100], train_y[:100])
 
 # Mathematics and Physics Prediction
 
@@ -48,6 +51,8 @@ def get_time(x,y,angle=60):
     t = math.sqrt(t)
     t *= x/math.cos(math.radians(angle))
     return t
+
+# logging.info("Running Instance of Game")
 
 def one_move():
     # Screenshot and pull into your workspace
@@ -111,6 +116,7 @@ def one_move():
     time = regr.predict([[x,y]])
     time = int(time[0])
     arr = (hero_pos, x, y, time)
+    print arr
     logging.info(",".join(map(str, arr)))    
     # time = get_time(x,y)
     cmd = ['adb', 'shell', 'input', 'swipe', '360', '640', '360', '640']
@@ -124,3 +130,4 @@ if __name__ == '__main__':
     while __gameover == False:
         one_move()
         time.sleep(1.0)
+    logging.info('GameOver')
